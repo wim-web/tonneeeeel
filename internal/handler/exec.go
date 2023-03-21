@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -47,9 +46,10 @@ func (b StartSessionCommandBuilder) Cmd() *exec.Cmd {
 }
 
 func ExecHandler() error {
-	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("ap-northeast-1"))
+	cfg, err := config.LoadDefaultConfig(context.Background())
+
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	ecsService := ecs.NewFromConfig(cfg)
@@ -58,7 +58,7 @@ func ExecHandler() error {
 	ress, err := ecsService.ListClusters(context.Background(), input2)
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	var clusters []string
@@ -75,7 +75,7 @@ func ExecHandler() error {
 	}
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	input := &ecs.ListTasksInput{
@@ -85,7 +85,7 @@ func ExecHandler() error {
 	res, err := ecsService.ListTasks(context.Background(), input)
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	taskArn := res.TaskArns[0]
@@ -100,13 +100,13 @@ func ExecHandler() error {
 	res2, err := ecsService.ExecuteCommand(context.Background(), execInput)
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	b, err := NewStartSessionCommandBuilder(res2, "ap-northeast-1")
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	cmd := b.Cmd()
