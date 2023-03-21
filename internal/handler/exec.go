@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/wim-web/tonneeeeel/internal/listview"
 )
 
@@ -45,65 +47,70 @@ func (b StartSessionCommandBuilder) Cmd() *exec.Cmd {
 	)
 }
 
-func ExecHandler() error {
-	cfg, err := config.LoadDefaultConfig(context.Background())
+func listClusters(c *ecs.Client) ([]string, error) {
+	input := &ecs.ListClustersInput{}
+	res, err := c.ListClusters(context.Background(), input)
 
 	if err != nil {
-		return err
-	}
-
-	ecsService := ecs.NewFromConfig(cfg)
-
-	input2 := &ecs.ListClustersInput{}
-	ress, err := ecsService.ListClusters(context.Background(), input2)
-
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var clusters []string
 
-	for _, arn := range ress.ClusterArns {
+	for _, arn := range res.ClusterArns {
 		v := strings.Split(arn, "/")
 		clusters = append(clusters, v[1])
 	}
 
-	cluster, quit, err := listview.RenderList("title", clusters)
+	return clusters, nil
+}
 
-	if quit {
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	input := &ecs.ListTasksInput{
-		Cluster: aws.String(cluster),
-	}
-
-	res, err := ecsService.ListTasks(context.Background(), input)
+func listTasks(c *ecs.Client, cluster string) ([]types.Task, error) {
+	ltRes, err := c.ListTasks(context.Background(), &ecs.ListTasksInput{
+		Cluster:       aws.String(cluster),
+		DesiredStatus: types.DesiredStatusRunning,
+	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	taskArn := res.TaskArns[0]
+	var tasks []types.Task
 
-	execInput := &ecs.ExecuteCommandInput{
+	dtRes, err := c.DescribeTasks(context.Background(), &ecs.DescribeTasksInput{
+		Tasks:   ltRes.TaskArns,
+		Cluster: &cluster,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task := range dtRes.Tasks {
+		if strings.HasPrefix(*task.Group, "service") {
+			tasks = append(tasks, task)
+		}
+	}
+
+	return tasks, nil
+}
+
+func execCommand(c *ecs.Client, cluster string, task string, command string, container *string, region string) error {
+	input := &ecs.ExecuteCommandInput{
 		Cluster:     aws.String(cluster),
-		Task:        aws.String(taskArn),
+		Task:        aws.String(task),
 		Interactive: *aws.Bool(true),
-		Command:     aws.String("ash"),
+		Command:     aws.String(command),
+		Container:   container,
 	}
 
-	res2, err := ecsService.ExecuteCommand(context.Background(), execInput)
+	res, err := c.ExecuteCommand(context.Background(), input)
 
 	if err != nil {
 		return err
 	}
 
-	b, err := NewStartSessionCommandBuilder(res2, "ap-northeast-1")
+	b, err := NewStartSessionCommandBuilder(res, region)
 
 	if err != nil {
 		return err
@@ -114,7 +121,92 @@ func ExecHandler() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
-	cmd.Run()
 
-	return nil
+	return cmd.Run()
+}
+
+func ExecHandler(command string) error {
+	cfg, err := config.LoadDefaultConfig(context.Background())
+
+	if err != nil {
+		return err
+	}
+
+	ecsService := ecs.NewFromConfig(cfg)
+
+	clusters, err := listClusters(ecsService)
+
+	if err != nil {
+		return err
+	}
+
+	cluster, quit, err := listview.RenderList("Select a cluster", clusters)
+
+	if quit {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	tasks, err := listTasks(ecsService, cluster)
+
+	if err != nil {
+		return err
+	}
+
+	var taskList []string
+	taskMap := map[string]string{}
+
+	for _, t := range tasks {
+		taskList = append(taskList, *t.Group)
+		taskMap[*t.Group] = *t.TaskArn
+	}
+
+	task, quit, err := listview.RenderList("Select a Task", taskList)
+
+	if quit {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	var containers []string
+
+	for _, t := range tasks {
+		for _, container := range t.Containers {
+			containers = append(containers, *container.Name)
+		}
+	}
+
+	var container *string
+
+	if len(containers) > 1 {
+		c, quit, err := listview.RenderList("Select a container", containers)
+		if quit {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		container = aws.String(c)
+	} else if len(containers) == 1 {
+		container = aws.String(containers[0])
+	} else {
+		return fmt.Errorf("%s don't have container", task)
+	}
+
+	return execCommand(
+		ecsService,
+		cluster,
+		taskMap[task],
+		command,
+		container,
+		cfg.Region,
+	)
 }
