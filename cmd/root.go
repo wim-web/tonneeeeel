@@ -1,28 +1,28 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
+	"log"
 	"os"
+	"os/exec"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "tonneeeeel",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		executeCommand()
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -40,4 +40,85 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func executeCommand() {
+	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("ap-northeast-1"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ecsService := ecs.NewFromConfig(cfg)
+
+	cluster := ""
+
+	input := &ecs.ListTasksInput{
+		Cluster: aws.String(cluster),
+	}
+
+	res, err := ecsService.ListTasks(context.Background(), input)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	taskArn := res.TaskArns[0]
+
+	execInput := &ecs.ExecuteCommandInput{
+		Cluster:     aws.String(cluster),
+		Task:        aws.String(taskArn),
+		Interactive: *aws.Bool(true),
+		Command:     aws.String("ash"),
+	}
+
+	res2, err := ecsService.ExecuteCommand(context.Background(), execInput)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	b, err := NewStartSessionCommandBuilder(res2, "ap-northeast-1")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	cmd := b.Cmd()
+
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
+type StartSessionCommandBuilder struct {
+	Command       string
+	Response      string
+	Region        string
+	OperationName string
+}
+
+func NewStartSessionCommandBuilder(response *ecs.ExecuteCommandOutput, region string) (StartSessionCommandBuilder, error) {
+	r, err := json.Marshal(response.Session)
+
+	if err != nil {
+		return StartSessionCommandBuilder{}, err
+	}
+
+	return StartSessionCommandBuilder{
+		Command:       "session-manager-plugin",
+		Response:      string(r),
+		Region:        region,
+		OperationName: "StartSession",
+	}, nil
+
+}
+
+func (b StartSessionCommandBuilder) Cmd() *exec.Cmd {
+	return exec.Command(
+		b.Command,
+		b.Response,
+		b.Region,
+		b.OperationName,
+	)
 }
