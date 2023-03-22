@@ -157,11 +157,11 @@ func ExecHandler(command string) error {
 	}
 
 	var taskList []string
-	taskMap := map[string]string{}
+	taskMap := map[string]types.Task{}
 
 	for _, t := range tasks {
 		taskList = append(taskList, *t.Group)
-		taskMap[*t.Group] = *t.TaskArn
+		taskMap[*t.Group] = t
 	}
 
 	task, quit, err := listview.RenderList("Select a Task", taskList)
@@ -176,10 +176,8 @@ func ExecHandler(command string) error {
 
 	var containers []string
 
-	for _, t := range tasks {
-		for _, container := range t.Containers {
-			containers = append(containers, *container.Name)
-		}
+	for _, container := range taskMap[task].Containers {
+		containers = append(containers, *container.Name)
 	}
 
 	var container *string
@@ -204,7 +202,7 @@ func ExecHandler(command string) error {
 	return execCommand(
 		ecsService,
 		cluster,
-		taskMap[task],
+		*taskMap[task].TaskArn,
 		command,
 		container,
 		cfg.Region,
