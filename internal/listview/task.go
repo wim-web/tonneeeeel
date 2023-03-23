@@ -60,7 +60,7 @@ func SelectTaskView(c *ecs.Client, cluster string) (types.Task, bool, error) {
 		return task, false, err
 	}
 
-	tasks := tasks(dtRes.Tasks)
+	tasks := tasks(dtRes.Tasks).onlyService()
 
 	taskName, quit, err := RenderList("Select a Task", tasks.names())
 
