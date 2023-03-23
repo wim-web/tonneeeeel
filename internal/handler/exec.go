@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/wim-web/tonneeeeel/internal/listview"
+	"github.com/wim-web/tonneeeeel/internal/view"
 )
 
 type StartSessionCommandBuilder struct {
@@ -83,25 +83,7 @@ func ExecHandler(command string) error {
 
 	ecsService := ecs.NewFromConfig(cfg)
 
-	cluster, quit, err := listview.SelectClusterView(ecsService)
-
-	if quit {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	task, quit, err := listview.SelectTaskView(ecsService, cluster)
-
-	if quit {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	container, quit, err := listview.SelectContainerView(task, true)
+	cluster, task, container, quit, err := view.Cluster2Task2Container(ecsService)
 
 	if quit {
 		return nil
