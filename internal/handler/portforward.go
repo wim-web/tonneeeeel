@@ -15,14 +15,18 @@ import (
 	"github.com/wim-web/tonneeeeel/internal/view"
 )
 
-func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerId string, region string) error {
+type DocumentName string
+
+const (
+	PORT_FORWARD_DOCUMENT_NAME        DocumentName = "AWS-StartPortForwardingSession"
+	REMOTE_PORT_FORWARD_DOCUMENT_NAME DocumentName = "AWS-StartPortForwardingSessionToRemoteHost"
+)
+
+func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerId string, region string, doc DocumentName, params map[string][]string) error {
 	input := &ssm.StartSessionInput{
 		Target:       aws.String(fmt.Sprintf("ecs:%s_%s_%s", cluster, taskId, containerId)),
-		DocumentName: aws.String("AWS-StartPortForwardingSession"),
-		Parameters: map[string][]string{
-			"portNumber":      {"22"},
-			"localPortNumber": {"10022"},
-		},
+		DocumentName: aws.String(string(doc)),
+		Parameters:   params,
 	}
 
 	res, err := c.StartSession(context.Background(), input)
@@ -46,7 +50,7 @@ func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerI
 	return cmd.Run()
 }
 
-func PortforwardHandler() error {
+func PortforwardHandler(doc DocumentName, params map[string][]string) error {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 
 	if err != nil {
@@ -73,5 +77,7 @@ func PortforwardHandler() error {
 		taskId,
 		*container.RuntimeId,
 		cfg.Region,
+		doc,
+		params,
 	)
 }
