@@ -78,7 +78,7 @@ func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerI
 	return cmd.Run()
 }
 
-func PForwardHandler() error {
+func PortforwardHandler() error {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 
 	if err != nil {

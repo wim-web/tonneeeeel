@@ -7,11 +7,11 @@ import (
 	"github.com/wim-web/tonneeeeel/internal/handler"
 )
 
-var pforwardCmd = &cobra.Command{
-	Use:   "pforward",
+var portforwardCmd = &cobra.Command{
+	Use:   "portforward",
 	Short: "like start-session --document-name AWS-StartPortForwardingSession",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := handler.PForwardHandler()
+		err := handler.PortforwardHandler()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -19,5 +19,5 @@ var pforwardCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(pforwardCmd)
+	rootCmd.AddCommand(portforwardCmd)
 }
