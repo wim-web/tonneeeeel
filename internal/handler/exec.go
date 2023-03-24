@@ -4,45 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"os/exec"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/wim-web/tonneeeeel/internal/session_manager"
 	"github.com/wim-web/tonneeeeel/internal/view"
 )
-
-type StartSessionCommandBuilder struct {
-	Command       string
-	Response      string
-	Region        string
-	OperationName string
-}
-
-func NewStartSessionCommandBuilder(response *ecs.ExecuteCommandOutput, region string) (StartSessionCommandBuilder, error) {
-	r, err := json.Marshal(response.Session)
-
-	if err != nil {
-		return StartSessionCommandBuilder{}, err
-	}
-
-	return StartSessionCommandBuilder{
-		Command:       "session-manager-plugin",
-		Response:      string(r),
-		Region:        region,
-		OperationName: "StartSession",
-	}, nil
-
-}
-
-func (b StartSessionCommandBuilder) Cmd() *exec.Cmd {
-	return exec.Command(
-		b.Command,
-		b.Response,
-		b.Region,
-		b.OperationName,
-	)
-}
 
 func execCommand(c *ecs.Client, cluster string, task string, command string, container *string, region string) error {
 	input := &ecs.ExecuteCommandInput{
@@ -59,13 +27,13 @@ func execCommand(c *ecs.Client, cluster string, task string, command string, con
 		return err
 	}
 
-	b, err := NewStartSessionCommandBuilder(res, region)
+	r, err := json.Marshal(res.Session)
 
 	if err != nil {
 		return err
 	}
 
-	cmd := b.Cmd()
+	cmd := session_manager.MakeStartSessionCmd(string(r), region)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
