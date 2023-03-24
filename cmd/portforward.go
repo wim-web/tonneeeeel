@@ -21,8 +21,8 @@ var portforwardCmd = &cobra.Command{
 		}
 
 		params := map[string][]string{
-			"portNumber":      {local},
-			"localPortNumber": {target},
+			"portNumber":      {target},
+			"localPortNumber": {local},
 		}
 		err = handler.PortforwardHandler(handler.PORT_FORWARD_DOCUMENT_NAME, params)
 		if err != nil {
