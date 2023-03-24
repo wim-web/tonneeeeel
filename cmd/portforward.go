@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/wim-web/tonneeeeel/internal/handler"
+	"github.com/wim-web/tonneeeeel/internal/port"
 )
 
 var portforwardCmd = &cobra.Command{
@@ -20,6 +22,14 @@ var portforwardCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		if local == "" {
+			l, err := port.AvailablePort()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			local = strconv.Itoa(l)
+		}
+
 		params := map[string][]string{
 			"portNumber":      {target},
 			"localPortNumber": {local},
@@ -33,6 +43,9 @@ var portforwardCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(portforwardCmd)
-	portforwardCmd.Flags().String("local-port", "", "local port")
-	portforwardCmd.Flags().String("target-port", "", "target port")
+
+	portforwardCmd.Flags().StringP("local-port", "l", "", "local port. if not specify, auto assigned")
+
+	portforwardCmd.Flags().StringP("target-port", "t", "", "target port")
+	portforwardCmd.MarkFlagRequired("target-port")
 }
