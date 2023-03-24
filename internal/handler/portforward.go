@@ -5,47 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/wim-web/tonneeeeel/internal/session_manager"
 	"github.com/wim-web/tonneeeeel/internal/view"
 )
-
-type PortForwardCommandBuilder struct {
-	Command       string
-	Response      string
-	Region        string
-	OperationName string
-}
-
-func NewPortForwardCommandBuilder(response *ssm.StartSessionOutput, region string) (PortForwardCommandBuilder, error) {
-	r, err := json.Marshal(response)
-
-	if err != nil {
-		return PortForwardCommandBuilder{}, err
-	}
-
-	return PortForwardCommandBuilder{
-		Command:       "session-manager-plugin",
-		Response:      string(r),
-		Region:        region,
-		OperationName: "StartSession",
-	}, nil
-
-}
-
-func (b PortForwardCommandBuilder) Cmd() *exec.Cmd {
-	return exec.Command(
-		b.Command,
-		b.Response,
-		b.Region,
-		b.OperationName,
-	)
-}
 
 func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerId string, region string) error {
 	input := &ssm.StartSessionInput{
@@ -63,13 +31,13 @@ func portForwardCommand(c *ssm.Client, cluster string, taskId string, containerI
 		return err
 	}
 
-	b, err := NewPortForwardCommandBuilder(res, region)
+	r, err := json.Marshal(res)
 
 	if err != nil {
 		return err
 	}
 
-	cmd := b.Cmd()
+	cmd := session_manager.MakeStartSessionCmd(string(r), region)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
