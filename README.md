@@ -37,6 +37,8 @@ Install the CLI tool with the following command:
 go install github.com/wim-web/tonneeeeel
 ```
 
+Or get binary from https://github.com/wim-web/tonneeeeel/releases
+
 ## License
 
 This project is published under the MIT License. For more information, see the [LICENSE](LICENSE) file.
