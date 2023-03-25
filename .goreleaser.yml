@@ -1,0 +1,16 @@
+---
+project_name: tonneeeeel
+archives:
+  - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - binary: tonneeeeel
+    main: main.go
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
