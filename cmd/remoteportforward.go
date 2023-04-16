@@ -9,7 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/wim-web/tonneeeeel/internal/handler"
-	"github.com/wim-web/tonneeeeel/internal/port"
+	"github.com/wim-web/tonneeeeel/pkg/command"
+	"github.com/wim-web/tonneeeeel/pkg/port"
 )
 
 var remoteportforwardCmd = &cobra.Command{
@@ -44,7 +45,7 @@ var remoteportforwardCmd = &cobra.Command{
 			"localPortNumber": {local},
 			"host":            {host},
 		}
-		err = handler.PortforwardHandler(handler.REMOTE_PORT_FORWARD_DOCUMENT_NAME, params)
+		err = handler.PortforwardHandler(command.REMOTE_PORT_FORWARD_DOCUMENT_NAME, params)
 		if err != nil {
 			log.Fatalln(err)
 		}
