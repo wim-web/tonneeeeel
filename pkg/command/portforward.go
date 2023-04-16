@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +19,7 @@ const (
 	REMOTE_PORT_FORWARD_DOCUMENT_NAME DocumentName = "AWS-StartPortForwardingSessionToRemoteHost"
 )
 
-func PortForwardCommand(ctx context.Context, c *ssm.Client, cluster string, taskId string, containerId string, region string, doc DocumentName, params map[string][]string) ([]byte, error) {
+func PortForwardCommand(ctx context.Context, c *ssm.Client, cluster string, taskId string, containerId string, region string, doc DocumentName, params map[string][]string) (*exec.Cmd, error) {
 	input := &ssm.StartSessionInput{
 		Target:       aws.String(fmt.Sprintf("ecs:%s_%s_%s", cluster, taskId, containerId)),
 		DocumentName: aws.String(string(doc)),
@@ -43,5 +44,5 @@ func PortForwardCommand(ctx context.Context, c *ssm.Client, cluster string, task
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 
-	return cmd.Output()
+	return cmd, nil
 }

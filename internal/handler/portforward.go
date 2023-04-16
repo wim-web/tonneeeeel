@@ -32,7 +32,7 @@ func PortforwardHandler(doc command.DocumentName, params map[string][]string) er
 
 	taskId := strings.Split(*task.TaskArn, "/")[2]
 
-	_, err = command.PortForwardCommand(
+	cmd, err := command.PortForwardCommand(
 		context.Background(),
 		ssmService,
 		cluster,
@@ -43,5 +43,9 @@ func PortforwardHandler(doc command.DocumentName, params map[string][]string) er
 		params,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return cmd.Run()
 }

@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/wim-web/tonneeeeel/internal/session_manager"
 )
 
-func ExecCommand(ctx context.Context, c *ecs.Client, cluster string, task string, command string, container *string, region string) ([]byte, error) {
+func ExecCommand(ctx context.Context, c *ecs.Client, cluster string, task string, command string, container *string, region string) (*exec.Cmd, error) {
 	input := &ecs.ExecuteCommandInput{
 		Cluster:     aws.String(cluster),
 		Task:        aws.String(task),
@@ -37,5 +38,5 @@ func ExecCommand(ctx context.Context, c *ecs.Client, cluster string, task string
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 
-	return cmd.Output()
+	return cmd, nil
 }

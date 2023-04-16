@@ -27,7 +27,7 @@ func ExecHandler(cmd string) error {
 		return err
 	}
 
-	_, err = command.ExecCommand(
+	exeCmd, err := command.ExecCommand(
 		context.Background(),
 		ecsService,
 		cluster,
@@ -37,5 +37,9 @@ func ExecHandler(cmd string) error {
 		cfg.Region,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return exeCmd.Run()
 }
