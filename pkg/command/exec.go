@@ -10,7 +10,7 @@ import (
 	"github.com/wim-web/tonneeeeel/internal/session_manager"
 )
 
-func ExecCommand(c *ecs.Client, cluster string, task string, command string, container *string, region string) error {
+func ExecCommand(ctx context.Context, c *ecs.Client, cluster string, task string, command string, container *string, region string) ([]byte, error) {
 	input := &ecs.ExecuteCommandInput{
 		Cluster:     aws.String(cluster),
 		Task:        aws.String(task),
@@ -22,20 +22,20 @@ func ExecCommand(c *ecs.Client, cluster string, task string, command string, con
 	res, err := c.ExecuteCommand(context.Background(), input)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	r, err := json.Marshal(res.Session)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cmd := session_manager.MakeStartSessionCmd(string(r), region)
+	cmd := session_manager.MakeStartSessionCmd(ctx, string(r), region)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 
-	return cmd.Run()
+	return cmd.Output()
 }
