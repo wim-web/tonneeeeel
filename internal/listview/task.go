@@ -2,7 +2,6 @@ package listview
 
 import (
 	"context"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -11,11 +10,11 @@ import (
 
 type tasks []types.Task
 
-func (ts tasks) onlyService() tasks {
+func (ts tasks) onlyEnableExecuteCommand() tasks {
 	filtered := tasks{}
 
 	for _, t := range ts {
-		if strings.HasPrefix(*t.Group, "service") {
+		if t.EnableExecuteCommand {
 			filtered = append(filtered, t)
 		}
 	}
@@ -60,7 +59,7 @@ func SelectTaskView(c *ecs.Client, cluster string) (types.Task, bool, error) {
 		return task, false, err
 	}
 
-	tasks := tasks(dtRes.Tasks).onlyService()
+	tasks := tasks(dtRes.Tasks).onlyEnableExecuteCommand()
 
 	taskName, quit, err := RenderList("Select a Task", tasks.names())
 
