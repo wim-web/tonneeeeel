@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.328
 	github.com/aws/aws-sdk-go-v2/config v1.18.36
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.29.6
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.7
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.7.1
