@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
 	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.1
+	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/spf13/cobra v1.7.0
 )
