@@ -34,7 +34,7 @@ Flags:
 Install the CLI tool with the following command:
 
 ```bash
-go install github.com/wim-web/tonneeeeel
+go install github.com/wim-web/tonneeeeel@latest
 ```
 
 Or get binary from https://github.com/wim-web/tonneeeeel/releases
