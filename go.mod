@@ -3,7 +3,7 @@ module github.com/wim-web/tonneeeeel
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.44.328
+	github.com/aws/aws-sdk-go v1.45.11
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
