@@ -3,7 +3,7 @@ module github.com/wim-web/tonneeeeel
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.45.11
+	github.com/aws/aws-sdk-go v1.48.11
 	github.com/aws/aws-sdk-go-v2/config v1.18.42
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
@@ -44,5 +44,5 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 )
