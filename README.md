@@ -1,3 +1,10 @@
+# No longer maintained
+
+rename
+
+https://github.com/wim-web/tnnl
+
+
 # tonneeeeel
 
 This CLI is an easy way to handle some ecs-related commands. (e.g. ecs exec, ssm start-session)
